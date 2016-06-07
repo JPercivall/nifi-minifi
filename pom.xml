@@ -95,6 +95,7 @@ limitations under the License.
         <org.slf4j.version>1.7.12</org.slf4j.version>
         <org.apache.nifi.version>0.6.0</org.apache.nifi.version>
         <jetty.version>9.3.8.v20160314</jetty.version>
+        <spring.version>4.1.6.RELEASE</spring.version>
     </properties>
 
     <dependencies>
@@ -130,6 +131,17 @@ limitations under the License.
             <dependency>
                 <groupId>org.apache.nifi.minifi</groupId>
                 <artifactId>minifi-framework</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi.minifi</groupId>
+                <artifactId>minifi-framework-nar</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+                <type>nar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi.minifi</groupId>
+                <artifactId>minifi-framework-core</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -227,6 +239,11 @@ limitations under the License.
             <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-site-to-site-client</artifactId>
+                <version>${org.apache.nifi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-expression-language</artifactId>
                 <version>${org.apache.nifi.version}</version>
             </dependency>
             <dependency>
@@ -383,6 +400,32 @@ limitations under the License.
             <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-ssl-context-service-api</artifactId>
+                <version>${org.apache.nifi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-administration</artifactId>
+                <version>${org.apache.nifi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-framework-core-api</artifactId>
+                <version>${org.apache.nifi.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-framework-core</artifactId>
                 <version>${org.apache.nifi.version}</version>
             </dependency>
 

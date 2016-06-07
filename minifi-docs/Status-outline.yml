@@ -1,0 +1,89 @@
+Status Report:
+  Controller Services:
+    - name: mockControllerService
+      Health:
+        state: ENABLED
+        has bulletins: TRUE
+        Validation Errors:
+          - subject: subject
+            input: input
+            reason: is not valid
+          - subject: subject2
+            input: input2
+            reason: is not valid 2
+      bulletins:
+        - time: Mon May 23 12:00:45 EDT 2016
+          message: Bulletin message
+  Processors:
+      - name: UpdateAttributeProcessorId
+        Health:
+          run status: Stopped
+          has bulletins: FALSE
+        Stats:
+          active threads: 1
+          flowfiles received: 2
+          bytes read: 3
+          bytes written: 4
+          flowfiles out: 5
+          taks: 6
+          processing nanos: 7
+        Bulletins:
+  Instance:
+    Health: 
+      queued count: 2
+      queued content size: 1
+      has bulletins: TRUE
+      active threads:3
+    Bulletins:
+      - time: Mon May 23 12:00:45 EDT 2016
+        message: Bulletin message
+  System Diagnostics:
+    Garbage Collection:
+      - name: garbage 2
+        count: 2
+        time: 20
+      - name: garbage 1
+        count: 1
+        time: 10
+    Heap:
+      total heap: 3
+      max heap: 5
+      free heap: 1
+      used heap: 2
+      heap utilization: 40
+      total nonheap: 8
+      max nonheap: 9
+      free nonheap: 2
+      used nonheap: 6
+      nonheap utilization: 67
+    Processor Stats:
+      load average: 80.9
+      available processors: 5
+    Content Repository Usage:
+      - name: contentRepo1
+        free space: 30
+        total space: 100
+        disk utilization: 70
+        used space: 70
+      - name: contentRepo2
+        free space: 50
+        total space: 60
+        disk utilization: 17
+        used space: 10
+    FlowFile Repository Usage:  
+        free space: 30
+        total space: 100
+        disk utilization: 70
+        used space: 70
+  Connections:
+    - name: connectionId
+      Health:
+        queued count: 10
+        queued size: 100
+      Stats:
+        input count: 1
+        input bytes: 2
+        ouput count: 3
+        output bytes: 4
+
+

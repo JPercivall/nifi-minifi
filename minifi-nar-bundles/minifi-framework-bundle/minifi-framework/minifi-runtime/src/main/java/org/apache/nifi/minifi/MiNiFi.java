@@ -16,7 +16,6 @@
  */
 package org.apache.nifi.minifi;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.Constructor;
@@ -31,13 +30,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.nifi.NiFiServer;
-import org.apache.nifi.documentation.DocGenerator;
 import org.apache.nifi.nar.ExtensionManager;
-import org.apache.nifi.nar.ExtensionMapping;
 import org.apache.nifi.nar.NarClassLoaders;
 import org.apache.nifi.nar.NarUnpacker;
-import org.apache.nifi.util.FileUtils;
 import org.apache.nifi.util.NiFiProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +41,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 public class MiNiFi {
 
     private static final Logger logger = LoggerFactory.getLogger(MiNiFi.class);
-    private final NiFiServer nifiServer;
+    private final MiNiFiServer minifiServer;
     private final BootstrapListener bootstrapListener;
 
     public static final String BOOTSTRAP_PORT_PROPERTY = "nifi.bootstrap.listen.port";
@@ -95,9 +90,9 @@ public class MiNiFi {
         // jetty will not attempt to re-extract the war into the directory. by removing
         // the working directory, we can be assured that it will attempt to extract the
         // war every time the application starts.
-        File webWorkingDir = properties.getWebWorkingDirectory();
+        /*File webWorkingDir = properties.getWebWorkingDirectory();
         FileUtils.deleteFilesInDirectory(webWorkingDir, null, logger, true, true);
-        FileUtils.deleteFile(webWorkingDir, logger, 3);
+        FileUtils.deleteFile(webWorkingDir, logger, 3);*/
 
         detectTimingIssues();
 
@@ -106,7 +101,7 @@ public class MiNiFi {
         SLF4JBridgeHandler.install();
 
         // expand the nars
-        final ExtensionMapping extensionMapping = NarUnpacker.unpackNars(properties);
+        NarUnpacker.unpackNars(properties);
 
         // load the extensions classloaders
         NarClassLoaders.load(properties);
@@ -121,21 +116,21 @@ public class MiNiFi {
         ExtensionManager.discoverExtensions();
         ExtensionManager.logClassLoaderMapping();
 
-        DocGenerator.generate(properties);
+        // DocGenerator.generate(properties);
 
         // load the server from the framework classloader
         Thread.currentThread().setContextClassLoader(frameworkClassLoader);
-        Class<?> jettyServer = Class.forName("org.apache.nifi.web.server.JettyServer", true, frameworkClassLoader);
-        Constructor<?> jettyConstructor = jettyServer.getConstructor(NiFiProperties.class);
+        Class<?> minifiServerClass= Class.forName("org.apache.nifi.minifi.MiNiFiServer", true, frameworkClassLoader);
+        Constructor<?> minifiServerConstructor = minifiServerClass.getConstructor(NiFiProperties.class);
 
         final long startTime = System.nanoTime();
-        nifiServer = (NiFiServer) jettyConstructor.newInstance(properties);
-        nifiServer.setExtensionMapping(extensionMapping);
+        minifiServer = (MiNiFiServer) minifiServerConstructor.newInstance(properties);
+        // minifiServer = new MiNiFiServer(properties);
 
         if (shutdown) {
             logger.info("MiNiFi has been shutdown via MiNiFi Bootstrap. Will not start Controller");
         } else {
-            nifiServer.start();
+            minifiServer.start();
 
             if (bootstrapListener != null) {
                 bootstrapListener.sendStartedStatus(true);
@@ -150,9 +145,9 @@ public class MiNiFi {
         try {
             this.shutdown = true;
 
-            logger.info("Initiating shutdown of Jetty web server...");
-            if (nifiServer != null) {
-                nifiServer.stop();
+            logger.info("Initiating shutdown of MiNiFi server...");
+            if (minifiServer != null) {
+                minifiServer.stop();
             }
             if (bootstrapListener != null) {
                 if (isReload) {
@@ -161,9 +156,9 @@ public class MiNiFi {
                     bootstrapListener.stop();
                 }
             }
-            logger.info("Jetty web server shutdown completed (nicely or otherwise).");
+            logger.info("MiNiFi server shutdown completed (nicely or otherwise).");
         } catch (final Throwable t) {
-            logger.warn("Problem occurred ensuring Jetty web server was properly terminated due to " + t);
+            logger.warn("Problem occurred ensuring MiNiFi server was properly terminated due to " + t);
         }
     }
 
@@ -188,14 +183,14 @@ public class MiNiFi {
         });
 
         final AtomicInteger occurrencesOutOfRange = new AtomicInteger(0);
-        final AtomicInteger occurences = new AtomicInteger(0);
+        final AtomicInteger occurrences = new AtomicInteger(0);
         final Runnable command = new Runnable() {
             @Override
             public void run() {
                 final long curMillis = System.currentTimeMillis();
                 final long difference = curMillis - lastTriggerMillis.get();
                 final long millisOff = Math.abs(difference - 2000L);
-                occurences.incrementAndGet();
+                occurrences.incrementAndGet();
                 if (millisOff > 500L) {
                     occurrencesOutOfRange.incrementAndGet();
                 }
@@ -211,7 +206,7 @@ public class MiNiFi {
                 future.cancel(true);
                 service.shutdownNow();
 
-                if (occurences.get() < minRequiredOccurrences || occurrencesOutOfRange.get() > maxOccurrencesOutOfRange) {
+                if (occurrences.get() < minRequiredOccurrences || occurrencesOutOfRange.get() > maxOccurrencesOutOfRange) {
                     logger.warn("MiNiFi has detected that this box is not responding within the expected timing interval, which may cause "
                         + "Processors to be scheduled erratically. Please see the MiNiFi documentation for more information.");
                 }

@@ -208,6 +208,10 @@ public class BootstrapListener {
                                         logger.info("Received DUMP request from Bootstrap");
                                         writeDump(socket.getOutputStream());
                                         break;
+                                    case STATUS_REPORT:
+                                        logger.info("Received STATUS_REPORT request from Bootstrap");
+                                        writeStatusReport(socket.getOutputStream());
+                                        break;
                                 }
                             } catch (final Throwable t) {
                                 logger.error("Failed to process request from Bootstrap due to " + t.toString(), t);
@@ -225,6 +229,10 @@ public class BootstrapListener {
                 }
             }
         }
+    }
+
+    private void writeStatusReport(final OutputStream out) throws IOException {
+        // TODO
     }
 
     private static void writeDump(final OutputStream out) throws IOException {
@@ -390,7 +398,8 @@ public class BootstrapListener {
             RELOAD,
             SHUTDOWN,
             DUMP,
-            PING;
+            PING,
+            STATUS_REPORT;
         }
 
         private final RequestType requestType;
