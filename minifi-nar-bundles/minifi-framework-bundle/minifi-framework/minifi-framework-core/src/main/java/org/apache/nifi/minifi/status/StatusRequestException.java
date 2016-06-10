@@ -14,38 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.nifi.minifi.status;
 
-package org.apache.nifi.minifi.commons.status.connection;
+public class StatusRequestException extends Exception {
 
-public class ConnectionStatus {
-    private String name;
-    private ConnectionHealth connectionHealth;
-    private ConnectionStats connectionStats;
+    private static final long serialVersionUID = 1L;
 
-    public ConnectionStatus() {
+    public StatusRequestException() {
+        super();
     }
 
-    public String getName() {
-        return name;
+    public StatusRequestException(final String message) {
+        super(message);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public StatusRequestException(final Throwable t) {
+        super(t);
     }
 
-    public ConnectionHealth getConnectionHealth() {
-        return connectionHealth;
-    }
-
-    public void setConnectionHealth(ConnectionHealth connectionHealth) {
-        this.connectionHealth = connectionHealth;
-    }
-
-    public ConnectionStats getConnectionStats() {
-        return connectionStats;
-    }
-
-    public void setConnectionStats(ConnectionStats connectionStats) {
-        this.connectionStats = connectionStats;
+    public StatusRequestException(final String message, final Throwable t) {
+        super(message, t);
     }
 }

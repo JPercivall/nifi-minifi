@@ -15,18 +15,20 @@
  * limitations under the License.
  */
 
-package org.apache.nifi.minifi.commons.status.controllerservice;
+package org.apache.nifi.minifi.commons.status.processor;
 
 import org.apache.nifi.minifi.commons.status.common.BulletinStatus;
 
 import java.util.List;
 
-public class ControllerServiceStatus implements java.io.Serializable {
+public class ProcessorStatusBean implements java.io.Serializable {
+
     private String name;
-    private ControllerServiceHealth controllerServiceHealth;
+    private ProcessorHealth processorHealth;
+    private ProcessorStats processorStats;
     private List<BulletinStatus> bulletinList;
 
-    public ControllerServiceStatus() {
+    public ProcessorStatusBean() {
     }
 
     public String getName() {
@@ -37,12 +39,20 @@ public class ControllerServiceStatus implements java.io.Serializable {
         this.name = name;
     }
 
-    public ControllerServiceHealth getControllerServiceHealth() {
-        return controllerServiceHealth;
+    public ProcessorHealth getProcessorHealth() {
+        return processorHealth;
     }
 
-    public void setControllerServiceHealth(ControllerServiceHealth controllerServiceHealth) {
-        this.controllerServiceHealth = controllerServiceHealth;
+    public void setProcessorHealth(ProcessorHealth processorHealth) {
+        this.processorHealth = processorHealth;
+    }
+
+    public ProcessorStats getProcessorStats() {
+        return processorStats;
+    }
+
+    public void setProcessorStats(ProcessorStats processorStats) {
+        this.processorStats = processorStats;
     }
 
     public List<BulletinStatus> getBulletinList() {
@@ -58,10 +68,11 @@ public class ControllerServiceStatus implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ControllerServiceStatus that = (ControllerServiceStatus) o;
+        ProcessorStatusBean that = (ProcessorStatusBean) o;
 
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        if (getControllerServiceHealth() != null ? !getControllerServiceHealth().equals(that.getControllerServiceHealth()) : that.getControllerServiceHealth() != null) return false;
+        if (getProcessorHealth() != null ? !getProcessorHealth().equals(that.getProcessorHealth()) : that.getProcessorHealth() != null) return false;
+        if (getProcessorStats() != null ? !getProcessorStats().equals(that.getProcessorStats()) : that.getProcessorStats() != null) return false;
         return getBulletinList() != null ? getBulletinList().equals(that.getBulletinList()) : that.getBulletinList() == null;
 
     }
@@ -69,7 +80,8 @@ public class ControllerServiceStatus implements java.io.Serializable {
     @Override
     public int hashCode() {
         int result = getName() != null ? getName().hashCode() : 0;
-        result = 31 * result + (getControllerServiceHealth() != null ? getControllerServiceHealth().hashCode() : 0);
+        result = 31 * result + (getProcessorHealth() != null ? getProcessorHealth().hashCode() : 0);
+        result = 31 * result + (getProcessorStats() != null ? getProcessorStats().hashCode() : 0);
         result = 31 * result + (getBulletinList() != null ? getBulletinList().hashCode() : 0);
         return result;
     }
@@ -78,7 +90,8 @@ public class ControllerServiceStatus implements java.io.Serializable {
     public String toString() {
         return "{" +
                 "name='" + name + '\'' +
-                ", controllerServiceHealth=" + controllerServiceHealth +
+                ", processorHealth=" + processorHealth +
+                ", processorStats=" + processorStats +
                 ", bulletinList=" + bulletinList +
                 '}';
     }

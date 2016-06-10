@@ -17,7 +17,7 @@
 
 package org.apache.nifi.minifi.commons.status.connection;
 
-public class ConnectionHealth {
+public class ConnectionHealth implements java.io.Serializable {
     private int queuedCount;
     private long queuedBytes;
 
@@ -40,4 +40,30 @@ public class ConnectionHealth {
         this.queuedBytes = queuedBytes;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ConnectionHealth that = (ConnectionHealth) o;
+
+        if (getQueuedCount() != that.getQueuedCount()) return false;
+        return getQueuedBytes() == that.getQueuedBytes();
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getQueuedCount();
+        result = 31 * result + (int) (getQueuedBytes() ^ (getQueuedBytes() >>> 32));
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "queuedCount=" + queuedCount +
+                ", queuedBytes=" + queuedBytes +
+                '}';
+    }
 }

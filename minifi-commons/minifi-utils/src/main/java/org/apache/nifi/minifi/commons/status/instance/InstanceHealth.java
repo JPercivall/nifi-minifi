@@ -17,28 +17,29 @@
 
 package org.apache.nifi.minifi.commons.status.instance;
 
-public class InstanceHealth {
+public class InstanceHealth implements java.io.Serializable {
 
-    private String queuedCount;
-    private String queuedContentSize;
+    private int queuedCount;
+    private double queuedContentSize;
     private boolean hasBulletins;
+    private int activeThreads;
 
     public InstanceHealth() {
     }
 
-    public String getQueuedCount() {
+    public int getQueuedCount() {
         return queuedCount;
     }
 
-    public void setQueuedCount(String queuedCount) {
+    public void setQueuedCount(int queuedCount) {
         this.queuedCount = queuedCount;
     }
 
-    public String getQueuedContentSize() {
+    public double getQueuedContentSize() {
         return queuedContentSize;
     }
 
-    public void setQueuedContentSize(String queuedContentSize) {
+    public void setQueuedContentSize(double queuedContentSize) {
         this.queuedContentSize = queuedContentSize;
     }
 
@@ -48,5 +49,49 @@ public class InstanceHealth {
 
     public void setHasBulletins(boolean hasBulletins) {
         this.hasBulletins = hasBulletins;
+    }
+
+    public int getActiveThreads() {
+        return activeThreads;
+    }
+
+    public void setActiveThreads(int activeThreads) {
+        this.activeThreads = activeThreads;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        InstanceHealth that = (InstanceHealth) o;
+
+        if (getQueuedCount() != that.getQueuedCount()) return false;
+        if (Double.compare(that.getQueuedContentSize(), getQueuedContentSize()) != 0) return false;
+        if (isHasBulletins() != that.isHasBulletins()) return false;
+        return activeThreads == that.activeThreads;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = getQueuedCount();
+        temp = Double.doubleToLongBits(getQueuedContentSize());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (isHasBulletins() ? 1 : 0);
+        result = 31 * result + activeThreads;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "queuedCount=" + queuedCount +
+                ", queuedContentSize=" + queuedContentSize +
+                ", hasBulletins=" + hasBulletins +
+                ", activeThreads=" + activeThreads +
+                '}';
     }
 }

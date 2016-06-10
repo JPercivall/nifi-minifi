@@ -17,7 +17,7 @@
 
 package org.apache.nifi.minifi.commons.status.system;
 
-public class FlowfileRepositoryUsage {
+public class FlowfileRepositoryUsage implements java.io.Serializable {
 
     private long freeSpace;
     private long totalSpace;
@@ -58,5 +58,38 @@ public class FlowfileRepositoryUsage {
 
     public void setDiskUtilization(int diskUtilization) {
         this.diskUtilization = diskUtilization;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FlowfileRepositoryUsage that = (FlowfileRepositoryUsage) o;
+
+        if (getFreeSpace() != that.getFreeSpace()) return false;
+        if (getTotalSpace() != that.getTotalSpace()) return false;
+        if (getUsedSpace() != that.getUsedSpace()) return false;
+        return getDiskUtilization() == that.getDiskUtilization();
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (getFreeSpace() ^ (getFreeSpace() >>> 32));
+        result = 31 * result + (int) (getTotalSpace() ^ (getTotalSpace() >>> 32));
+        result = 31 * result + (int) (getUsedSpace() ^ (getUsedSpace() >>> 32));
+        result = 31 * result + getDiskUtilization();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "freeSpace=" + freeSpace +
+                ", totalSpace=" + totalSpace +
+                ", usedSpace=" + usedSpace +
+                ", diskUtilization=" + diskUtilization +
+                '}';
     }
 }

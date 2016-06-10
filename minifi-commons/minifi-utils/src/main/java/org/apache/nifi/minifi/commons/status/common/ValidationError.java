@@ -17,7 +17,7 @@
 
 package org.apache.nifi.minifi.commons.status.common;
 
-public class ValidationError {
+public class ValidationError implements java.io.Serializable {
     private String subject;
     private String input;
     private String reason;
@@ -47,5 +47,35 @@ public class ValidationError {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ValidationError that = (ValidationError) o;
+
+        if (getSubject() != null ? !getSubject().equals(that.getSubject()) : that.getSubject() != null) return false;
+        if (getInput() != null ? !getInput().equals(that.getInput()) : that.getInput() != null) return false;
+        return getReason() != null ? getReason().equals(that.getReason()) : that.getReason() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getSubject() != null ? getSubject().hashCode() : 0;
+        result = 31 * result + (getInput() != null ? getInput().hashCode() : 0);
+        result = 31 * result + (getReason() != null ? getReason().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "subject='" + subject + '\'' +
+                ", input='" + input + '\'' +
+                ", reason='" + reason + '\'' +
+                '}';
     }
 }

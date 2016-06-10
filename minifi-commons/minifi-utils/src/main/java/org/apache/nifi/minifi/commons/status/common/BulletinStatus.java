@@ -19,11 +19,11 @@ package org.apache.nifi.minifi.commons.status.common;
 
 import java.util.Date;
 
-public class Bulletin {
+public class BulletinStatus implements java.io.Serializable {
     private Date timestamp;
     private String message;
 
-    public Bulletin() {
+    public BulletinStatus() {
     }
 
     public Date getTimestamp() {
@@ -40,5 +40,32 @@ public class Bulletin {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BulletinStatus bulletin = (BulletinStatus) o;
+
+        if (getTimestamp() != null ? !getTimestamp().equals(bulletin.getTimestamp()) : bulletin.getTimestamp() != null) return false;
+        return getMessage() != null ? getMessage().equals(bulletin.getMessage()) : bulletin.getMessage() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getTimestamp() != null ? getTimestamp().hashCode() : 0;
+        result = 31 * result + (getMessage() != null ? getMessage().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "timestamp=" + timestamp +
+                ", message='" + message + '\'' +
+                '}';
     }
 }

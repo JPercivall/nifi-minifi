@@ -26,6 +26,9 @@ import org.apache.nifi.controller.StandardFlowService;
 import org.apache.nifi.controller.repository.FlowFileEventRepository;
 import org.apache.nifi.controller.repository.RingBufferEventRepository;
 import org.apache.nifi.encrypt.StringEncryptor;
+import org.apache.nifi.minifi.commons.status.FlowStatusReport;
+import org.apache.nifi.minifi.status.StatusConfigReporter;
+import org.apache.nifi.minifi.status.StatusRequestException;
 import org.apache.nifi.nar.ExtensionMapping;
 import org.apache.nifi.services.FlowService;
 import org.apache.nifi.util.NiFiProperties;
@@ -75,6 +78,9 @@ public class MiNiFiServer implements NiFiServer {
             // start and load the flow
             flowService.start();
             flowService.load(null);
+            flowController.onFlowInitialized(true);
+            //flowController.getGroup(flowController.getRootGroupId()).startProcessing();
+
 
             logger.info("Flow loaded successfully.");
 
@@ -103,12 +109,21 @@ public class MiNiFiServer implements NiFiServer {
     public void stop() {
         try {
             flowService.stop(false);
-        } catch (Exception ex) {
-            logger.warn("Failed to stop minifi server", ex);
+        } catch (Exception e) {
+            String msg = "Problem occurred ensuring flow controller or repository was properly terminated due to " + e;
+            if (logger.isDebugEnabled()) {
+                logger.warn(msg, e);
+            } else {
+                logger.warn(msg);
+            }
         }
     }
 
-    protected FlowService getFlowService() {
-        return flowService;
+    public FlowStatusReport getStatusReport(String requestString) throws StatusRequestException {
+        return StatusConfigReporter.getStatus(flowService.getController(), requestString, logger);
     }
+
+    /*protected FlowService getFlowService() {
+        return flowService;
+    }*/
 }

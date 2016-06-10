@@ -17,7 +17,7 @@
 
 package org.apache.nifi.minifi.commons.status.system;
 
-public class SystemProcessorStats {
+public class SystemProcessorStats implements java.io.Serializable {
 
     private double loadAverage;
     private int availableProcessors;
@@ -39,5 +39,35 @@ public class SystemProcessorStats {
 
     public void setAvailableProcessors(int availableProcessors) {
         this.availableProcessors = availableProcessors;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SystemProcessorStats that = (SystemProcessorStats) o;
+
+        if (Double.compare(that.getLoadAverage(), getLoadAverage()) != 0) return false;
+        return getAvailableProcessors() == that.getAvailableProcessors();
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(getLoadAverage());
+        result = (int) (temp ^ (temp >>> 32));
+        result = 31 * result + getAvailableProcessors();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "loadAverage=" + loadAverage +
+                ", availableProcessors=" + availableProcessors +
+                '}';
     }
 }

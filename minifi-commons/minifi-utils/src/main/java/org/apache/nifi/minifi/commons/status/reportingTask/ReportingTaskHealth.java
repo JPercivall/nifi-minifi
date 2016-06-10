@@ -15,26 +15,27 @@
  * limitations under the License.
  */
 
-package org.apache.nifi.minifi.commons.status.controllerservice;
+package org.apache.nifi.minifi.commons.status.reportingTask;
 
 import org.apache.nifi.minifi.commons.status.common.ValidationError;
 
 import java.util.List;
 
-public class ControllerServiceHealth implements java.io.Serializable {
-    private String state;
+public class ReportingTaskHealth implements java.io.Serializable {
+    private String scheduledState;
     private boolean hasBulletins;
+    private int activeThreads;
     private List<ValidationError> validationErrorList;
 
-    public ControllerServiceHealth() {
+    public ReportingTaskHealth() {
     }
 
-    public String getState() {
-        return state;
+    public String getScheduledState() {
+        return scheduledState;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setScheduledState(String scheduledState) {
+        this.scheduledState = scheduledState;
     }
 
     public boolean isHasBulletins() {
@@ -43,6 +44,14 @@ public class ControllerServiceHealth implements java.io.Serializable {
 
     public void setHasBulletins(boolean hasBulletins) {
         this.hasBulletins = hasBulletins;
+    }
+
+    public int getActiveThreads() {
+        return activeThreads;
+    }
+
+    public void setActiveThreads(int activeThreads) {
+        this.activeThreads = activeThreads;
     }
 
     public List<ValidationError> getValidationErrorList() {
@@ -58,18 +67,20 @@ public class ControllerServiceHealth implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ControllerServiceHealth that = (ControllerServiceHealth) o;
+        ReportingTaskHealth that = (ReportingTaskHealth) o;
 
         if (isHasBulletins() != that.isHasBulletins()) return false;
-        if (getState() != null ? !getState().equals(that.getState()) : that.getState() != null) return false;
+        if (getActiveThreads() != that.getActiveThreads()) return false;
+        if (getScheduledState() != null ? !getScheduledState().equals(that.getScheduledState()) : that.getScheduledState() != null) return false;
         return getValidationErrorList() != null ? getValidationErrorList().equals(that.getValidationErrorList()) : that.getValidationErrorList() == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = getState() != null ? getState().hashCode() : 0;
+        int result = getScheduledState() != null ? getScheduledState().hashCode() : 0;
         result = 31 * result + (isHasBulletins() ? 1 : 0);
+        result = 31 * result + getActiveThreads();
         result = 31 * result + (getValidationErrorList() != null ? getValidationErrorList().hashCode() : 0);
         return result;
     }
@@ -77,8 +88,9 @@ public class ControllerServiceHealth implements java.io.Serializable {
     @Override
     public String toString() {
         return "{" +
-                "state='" + state + '\'' +
+                "scheduledState='" + scheduledState + '\'' +
                 ", hasBulletins=" + hasBulletins +
+                ", activeThreads=" + activeThreads +
                 ", validationErrorList=" + validationErrorList +
                 '}';
     }

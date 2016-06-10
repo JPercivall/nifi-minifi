@@ -29,12 +29,38 @@ import org.apache.nifi.diagnostics.GarbageCollection;
 import org.apache.nifi.diagnostics.StorageUsage;
 import org.apache.nifi.diagnostics.SystemDiagnostics;
 import org.apache.nifi.groups.RemoteProcessGroup;
+import org.apache.nifi.minifi.commons.status.common.BulletinStatus;
+import org.apache.nifi.minifi.commons.status.common.ValidationError;
+import org.apache.nifi.minifi.commons.status.connection.ConnectionHealth;
+import org.apache.nifi.minifi.commons.status.connection.ConnectionStats;
+import org.apache.nifi.minifi.commons.status.connection.ConnectionStatusBean;
+import org.apache.nifi.minifi.commons.status.controllerservice.ControllerServiceHealth;
+import org.apache.nifi.minifi.commons.status.controllerservice.ControllerServiceStatus;
+import org.apache.nifi.minifi.commons.status.instance.InstanceHealth;
+import org.apache.nifi.minifi.commons.status.instance.InstanceStats;
+import org.apache.nifi.minifi.commons.status.instance.InstanceStatus;
+import org.apache.nifi.minifi.commons.status.processor.ProcessorHealth;
+import org.apache.nifi.minifi.commons.status.processor.ProcessorStats;
+import org.apache.nifi.minifi.commons.status.processor.ProcessorStatusBean;
+import org.apache.nifi.minifi.commons.status.reportingTask.ReportingTaskHealth;
+import org.apache.nifi.minifi.commons.status.reportingTask.ReportingTaskStatus;
+import org.apache.nifi.minifi.commons.status.rpg.InputPortStatus;
+import org.apache.nifi.minifi.commons.status.rpg.RemoteProcessingGroupHealth;
+import org.apache.nifi.minifi.commons.status.rpg.RemoteProcessingGroupStats;
+import org.apache.nifi.minifi.commons.status.rpg.RemoteProcessingGroupStatusBean;
+import org.apache.nifi.minifi.commons.status.system.ContentRepositoryUsage;
+import org.apache.nifi.minifi.commons.status.system.FlowfileRepositoryUsage;
+import org.apache.nifi.minifi.commons.status.system.GarbageCollectionStatus;
+import org.apache.nifi.minifi.commons.status.system.HeapStatus;
+import org.apache.nifi.minifi.commons.status.system.SystemDiagnosticsStatus;
+import org.apache.nifi.minifi.commons.status.system.SystemProcessorStats;
 import org.apache.nifi.remote.RemoteGroupPort;
 import org.apache.nifi.reporting.Bulletin;
 import org.apache.nifi.reporting.BulletinQuery;
 import org.slf4j.Logger;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,182 +69,143 @@ public final class StatusRequestParser {
     private StatusRequestParser() {
     }
 
-    static StringBuilder parseProcessorStatusRequest(ProcessorStatus processorStatus, String statusTypes, FlowController flowController, Collection<ValidationResult> validationResults) {
-        StringBuilder statusBuilder = new StringBuilder();
-
-        statusBuilder.append("Processor '");
-        statusBuilder.append(processorStatus.getId());
-        statusBuilder.append("':");
+    static ProcessorStatusBean parseProcessorStatusRequest(ProcessorStatus inputProcessorStatus, String statusTypes, FlowController flowController, Collection<ValidationResult> validationResults) {
+        ProcessorStatusBean processorStatusBean = new ProcessorStatusBean();
+        processorStatusBean.setName(inputProcessorStatus.getName());
 
         String[] statusSplits = statusTypes.split(",");
         List<Bulletin> bulletinList = flowController.getBulletinRepository().findBulletins(
                 new BulletinQuery.Builder()
-                        .sourceIdMatches(processorStatus.getId())
+                        .sourceIdMatches(inputProcessorStatus.getId())
                         .build());
 
         for (String statusType : statusSplits) {
             switch (statusType.toLowerCase().trim()) {
                 case "health":
-                    statusBuilder.append("<Health {Run Status:");
-                    statusBuilder.append(processorStatus.getRunStatus());
-                    statusBuilder.append(", Has Bulletin(s):");
-                    statusBuilder.append(!bulletinList.isEmpty());
+                    ProcessorHealth processorHealth = new ProcessorHealth();
 
-                    appendValidationResults(statusBuilder, validationResults);
-                    statusBuilder.append("}>");
+                    processorHealth.setRunStatus(inputProcessorStatus.getRunStatus().name());
+                    processorHealth.setHasBulletins(!bulletinList.isEmpty());
+                    processorHealth.setValidationErrorList(transformValidationResults(validationResults));
+
+                    processorStatusBean.setProcessorHealth(processorHealth);
                     break;
                 case "bulletins":
-                    printBulletins(statusBuilder, bulletinList);
+                    processorStatusBean.setBulletinList(transformBulletins(bulletinList));
                     break;
                 case "stats":
-                    statusBuilder.append("<Stats {Active Threads:");
-                    statusBuilder.append(processorStatus.getActiveThreadCount());
-                    statusBuilder.append(", FlowFiles Received:");
-                    statusBuilder.append(processorStatus.getFlowFilesReceived());
-                    statusBuilder.append(", Bytes Read:");
-                    statusBuilder.append(processorStatus.getBytesRead());
-                    statusBuilder.append(", Bytes Written:");
-                    statusBuilder.append(processorStatus.getBytesWritten());
-                    statusBuilder.append(", FlowFiles Out:");
-                    statusBuilder.append(processorStatus.getFlowFilesSent());
-                    statusBuilder.append(", Tasks:");
-                    statusBuilder.append(processorStatus.getInvocations());
-                    statusBuilder.append(", Processing Nanos:");
-                    statusBuilder.append(processorStatus.getProcessingNanos());
-                    statusBuilder.append("}>");
+                    ProcessorStats processorStats = new ProcessorStats();
+
+                    processorStats.setActiveThreads(inputProcessorStatus.getActiveThreadCount());
+                    processorStats.setFlowfilesReceived(inputProcessorStatus.getFlowFilesReceived());
+                    processorStats.setBytesRead(inputProcessorStatus.getBytesRead());
+                    processorStats.setBytesWritten(inputProcessorStatus.getBytesWritten());
+                    processorStats.setFlowfilesSent(inputProcessorStatus.getFlowFilesSent());
+                    processorStats.setInvocations(inputProcessorStatus.getInvocations());
+                    processorStats.setProcessingNanos(inputProcessorStatus.getProcessingNanos());
+
+                    processorStatusBean.setProcessorStats(processorStats);
                     break;
             }
         }
-        return statusBuilder;
+        return processorStatusBean;
     }
 
-    static StringBuilder parseRemoteProcessingGroupStatusRequest(RemoteProcessGroupStatus remoteProcessGroupStatus, String statusTypes, FlowController flowController) {
-        StringBuilder statusBuilder = new StringBuilder();
-
-        statusBuilder.append("Remote Processing Group '");
-        statusBuilder.append(remoteProcessGroupStatus.getId());
-        statusBuilder.append("':");
+    static RemoteProcessingGroupStatusBean parseRemoteProcessingGroupStatusRequest(RemoteProcessGroupStatus inputRemoteProcessGroupStatus, String statusTypes, FlowController flowController) {
+        RemoteProcessingGroupStatusBean remoteProcessingGroupStatusBean = new RemoteProcessingGroupStatusBean();
+        remoteProcessingGroupStatusBean.setName(inputRemoteProcessGroupStatus.getName());
 
         String rootGroupId = flowController.getRootGroupId();
         String[] statusSplits = statusTypes.split(",");
 
         List<Bulletin> bulletinList = flowController.getBulletinRepository().findBulletins(
                 new BulletinQuery.Builder()
-                        .sourceIdMatches(remoteProcessGroupStatus.getId())
+                        .sourceIdMatches(inputRemoteProcessGroupStatus.getId())
                         .build());
-        List<String> authorizationIssues = remoteProcessGroupStatus.getAuthorizationIssues();
+        List<String> authorizationIssues = inputRemoteProcessGroupStatus.getAuthorizationIssues();
 
         for (String statusType : statusSplits) {
             switch (statusType.toLowerCase().trim()) {
                 case "health":
-                    statusBuilder.append("<Health {Transmission Status:");
-                    statusBuilder.append(remoteProcessGroupStatus.getTransmissionStatus());
-                    statusBuilder.append(", Has Bulletin(s):");
-                    statusBuilder.append(!bulletinList.isEmpty());
-                    statusBuilder.append(", Has Authorization Issue(s):");
-                    statusBuilder.append(!authorizationIssues.isEmpty());
-                    statusBuilder.append(", Active Port Count:");
-                    statusBuilder.append(remoteProcessGroupStatus.getActiveRemotePortCount());
-                    statusBuilder.append(", Inactive Port Count:");
-                    statusBuilder.append(remoteProcessGroupStatus.getInactiveRemotePortCount());
-                    statusBuilder.append("}>");
+                    RemoteProcessingGroupHealth remoteProcessingGroupHealth = new RemoteProcessingGroupHealth();
+
+                    remoteProcessingGroupHealth.setTransmissionStatus(inputRemoteProcessGroupStatus.getTransmissionStatus().name());
+                    remoteProcessingGroupHealth.setHasAuthorizationIssues(!authorizationIssues.isEmpty());
+                    remoteProcessingGroupHealth.setActivePortCount(inputRemoteProcessGroupStatus.getActiveRemotePortCount());
+                    remoteProcessingGroupHealth.setInactivePortCount(inputRemoteProcessGroupStatus.getInactiveRemotePortCount());
+                    remoteProcessingGroupHealth.setHasBulletins(!bulletinList.isEmpty());
+
+                    remoteProcessingGroupStatusBean.setRemoteProcessingGroupHealth(remoteProcessingGroupHealth);
                     break;
                 case "bulletins":
-                    printBulletins(statusBuilder, bulletinList);
+                    remoteProcessingGroupStatusBean.setBulletinList(transformBulletins(bulletinList));
                     break;
                 case "authorizationissues":
-                    statusBuilder.append("<Authorization Issue(s) ");
-                    boolean first = true;
-                    for (String authorizationIssue : authorizationIssues) {
-                        if (!first) {
-                            statusBuilder.append(", ");
-                        }
-                        statusBuilder.append("'");
-                        statusBuilder.append(authorizationIssue);
-                        statusBuilder.append("'");
-                        first = false;
-                    }
-                    statusBuilder.append(">");
+                    remoteProcessingGroupStatusBean.setAuthorizationIssues(authorizationIssues);
                     break;
-                case "inputPorts":
-                    RemoteProcessGroup remoteProcessGroup = flowController.getGroup(rootGroupId).getRemoteProcessGroup(remoteProcessGroupStatus.getId());
+                case "inputports":
+                    List<InputPortStatus> inputPortStatusList = new LinkedList<>();
+                    RemoteProcessGroup remoteProcessGroup = flowController.getGroup(rootGroupId).getRemoteProcessGroup(inputRemoteProcessGroupStatus.getId());
                     Set<RemoteGroupPort> inputPorts = remoteProcessGroup.getInputPorts();
-                    statusBuilder.append("<Ports {");
-                    first = true;
+
                     for (RemoteGroupPort inputPort : inputPorts) {
-                        if (!first) {
-                            statusBuilder.append(", ");
-                        }
-                        statusBuilder.append(inputPort.getName());
-                        statusBuilder.append(":'");
-                        if (!inputPort.getTargetExists()){
-                            statusBuilder.append("'target does not exist'");
-                        } else if (!inputPort.isTargetRunning()) {
-                            statusBuilder.append("'target exists but is not running'");
-                        } else {
-                            statusBuilder.append("'target exists and is running'");
-                        }
-                        statusBuilder.append("'}");
-                        first = false;
+                        InputPortStatus inputPortStatus = new InputPortStatus();
+
+                        inputPortStatus.setName(inputPort.getName());
+                        inputPortStatus.setTargetExists(inputPort.getTargetExists());
+                        inputPortStatus.setTargetRunning(inputPort.isTargetRunning());
+
+                        inputPortStatusList.add(inputPortStatus);
                     }
+                    remoteProcessingGroupStatusBean.setInputPortStatusList(inputPortStatusList);
                     break;
                 case "stats":
-                    statusBuilder.append("<Stats {Active Threads:");
-                    statusBuilder.append(remoteProcessGroupStatus.getActiveThreadCount());
-                    statusBuilder.append(", Sent Count:");
-                    statusBuilder.append(remoteProcessGroupStatus.getSentCount());
-                    statusBuilder.append(", Sent Content Size:");
-                    statusBuilder.append(remoteProcessGroupStatus.getSentContentSize());
-                    statusBuilder.append("}>");
+                    RemoteProcessingGroupStats remoteProcessingGroupStats = new RemoteProcessingGroupStats();
+
+                    remoteProcessingGroupStats.setActiveThreads(inputRemoteProcessGroupStatus.getActiveThreadCount());
+                    remoteProcessingGroupStats.setSentContentSize(inputRemoteProcessGroupStatus.getSentContentSize());
+                    remoteProcessingGroupStats.setSentCount(inputRemoteProcessGroupStatus.getSentCount());
+
+                    remoteProcessingGroupStatusBean.setRemoteProcessingGroupStats(remoteProcessingGroupStats);
                     break;
             }
         }
-        return statusBuilder;
+        return remoteProcessingGroupStatusBean;
     }
 
-    static StringBuilder parseConnectionStatusRequest(ConnectionStatus connectionStatus, String statusTypes, Logger logger) {
-        StringBuilder statusBuilder = new StringBuilder();
-
-        statusBuilder.append("Connection '");
-        statusBuilder.append(connectionStatus.getId());
-        statusBuilder.append("':");
+    static ConnectionStatusBean parseConnectionStatusRequest(ConnectionStatus inputConnectionStatus, String statusTypes, Logger logger) {
+        ConnectionStatusBean connectionStatusBean = new ConnectionStatusBean();
+        connectionStatusBean.setName(inputConnectionStatus.getName());
 
         String[] statusSplits = statusTypes.split(",");
         for (String statusType : statusSplits) {
             switch (statusType.toLowerCase().trim()) {
                 case "health":
-                    statusBuilder.append("<Health {Queued Count:");
-                    statusBuilder.append(connectionStatus.getQueuedCount());
-                    statusBuilder.append(", Queued Size:");
-                    statusBuilder.append(connectionStatus.getQueuedBytes());
-                    statusBuilder.append("}>");
-                    break;
-                case "bulletins":
-                    statusBuilder.append("<Bulletins {'bulletins' is not a valid request for connections}>");
-                    logger.warn("Status request is asking for bulletins for connection " + connectionStatus.getId() + " but bulletins are not possible for connections");
+                    ConnectionHealth connectionHealth = new ConnectionHealth();
+
+                    connectionHealth.setQueuedBytes(inputConnectionStatus.getQueuedBytes());
+                    connectionHealth.setQueuedCount(inputConnectionStatus.getQueuedCount());
+
+                    connectionStatusBean.setConnectionHealth(connectionHealth);
                     break;
                 case "stats":
-                    statusBuilder.append("<Stats {Input Count:");
-                    statusBuilder.append(connectionStatus.getInputCount());
-                    statusBuilder.append(", Input Bytes:");
-                    statusBuilder.append(connectionStatus.getInputBytes());
-                    statusBuilder.append(", Output Count:");
-                    statusBuilder.append(connectionStatus.getOutputCount());
-                    statusBuilder.append(", Output Bytes:");
-                    statusBuilder.append(connectionStatus.getOutputBytes());
-                    statusBuilder.append("}>");
+                    ConnectionStats connectionStats = new ConnectionStats();
+
+                    connectionStats.setInputBytes(inputConnectionStatus.getInputBytes());
+                    connectionStats.setInputCount(inputConnectionStatus.getInputCount());
+                    connectionStats.setOutputCount(inputConnectionStatus.getOutputCount());
+                    connectionStats.setOutputBytes(inputConnectionStatus.getOutputBytes());
+
+                    connectionStatusBean.setConnectionStats(connectionStats);
                     break;
             }
         }
-        return statusBuilder;
+        return connectionStatusBean;
     }
 
-    static StringBuilder parseReportingTaskStatusRequest(String id, ReportingTaskNode reportingTaskNode, String statusTypes, FlowController flowController, Logger logger) {
-        StringBuilder statusBuilder = new StringBuilder();
-
-        statusBuilder.append("Reporting Task '");
-        statusBuilder.append(id);
-        statusBuilder.append("':");
+    static ReportingTaskStatus parseReportingTaskStatusRequest(String id, ReportingTaskNode reportingTaskNode, String statusTypes, FlowController flowController, Logger logger) {
+        ReportingTaskStatus reportingTaskStatus = new ReportingTaskStatus();
+        reportingTaskStatus.setName(id);
 
         String[] statusSplits = statusTypes.split(",");
         List<Bulletin> bulletinList = flowController.getBulletinRepository().findBulletins(
@@ -228,37 +215,29 @@ public final class StatusRequestParser {
         for (String statusType : statusSplits) {
             switch (statusType.toLowerCase().trim()) {
                 case "health":
-                    statusBuilder.append("<Health {Scheduled State:");
-                    statusBuilder.append(reportingTaskNode.getScheduledState());
-                    statusBuilder.append(", Has Bulletin(s):");
-                    statusBuilder.append(!bulletinList.isEmpty());
-                    statusBuilder.append(", Active Threads:");
-                    statusBuilder.append(reportingTaskNode.getActiveThreadCount());
+                    ReportingTaskHealth reportingTaskHealth = new ReportingTaskHealth();
+
+                    reportingTaskHealth.setScheduledState(reportingTaskNode.getScheduledState().name());
+                    reportingTaskHealth.setActiveThreads(reportingTaskNode.getActiveThreadCount());
+                    reportingTaskHealth.setHasBulletins(!bulletinList.isEmpty());
 
                     Collection<ValidationResult> validationResults = reportingTaskNode.getValidationErrors();
-                    appendValidationResults(statusBuilder, validationResults);
+                    reportingTaskHealth.setValidationErrorList(transformValidationResults(validationResults));
 
-                    statusBuilder.append("}>");
+                    reportingTaskStatus.setReportingTaskHealth(reportingTaskHealth);
                     break;
                 case "bulletins":
-                    printBulletins(statusBuilder, bulletinList);
-                    break;
-                case "stats":
-                    statusBuilder.append("<Stats {'stats' is not a valid request for reporting tasks}>");
-                    logger.warn("Status request is asking for stats for reporting task " + id + " but stats are not possible for reporting tasks");
+                    reportingTaskStatus.setBulletinList(transformBulletins(bulletinList));
                     break;
             }
         }
-        return statusBuilder;
+        return reportingTaskStatus;
     }
 
-    static StringBuilder parseControllerServiceStatusRequest(ControllerServiceNode controllerServiceNode, String statusTypes, FlowController flowController, Logger logger) {
-        StringBuilder statusBuilder = new StringBuilder();
+    static ControllerServiceStatus parseControllerServiceStatusRequest(ControllerServiceNode controllerServiceNode, String statusTypes, FlowController flowController, Logger logger) {
+        ControllerServiceStatus controllerServiceStatus = new ControllerServiceStatus();
         String id = controllerServiceNode.getIdentifier();
-
-        statusBuilder.append("Controller Service '");
-        statusBuilder.append(id);
-        statusBuilder.append("':");
+        controllerServiceStatus.setName(id);
 
         String[] statusSplits = statusTypes.split(",");
         List<Bulletin> bulletinList = flowController.getBulletinRepository().findBulletins(
@@ -268,225 +247,170 @@ public final class StatusRequestParser {
         for (String statusType : statusSplits) {
             switch (statusType.toLowerCase().trim()) {
                 case "health":
-                    statusBuilder.append("<Health {State:");
-                    statusBuilder.append(controllerServiceNode.getState());
-                    statusBuilder.append(", Has Bulletin(s):");
-                    statusBuilder.append(!bulletinList.isEmpty());
+                    ControllerServiceHealth controllerServiceHealth = new ControllerServiceHealth();
+
+                    controllerServiceHealth.setState(controllerServiceNode.getState().name());
+                    controllerServiceHealth.setHasBulletins(!bulletinList.isEmpty());
 
                     Collection<ValidationResult> validationResults = controllerServiceNode.getValidationErrors();
-                    appendValidationResults(statusBuilder, validationResults);
+                    controllerServiceHealth.setValidationErrorList(transformValidationResults(validationResults));
 
-                    statusBuilder.append("}>");
+                    controllerServiceStatus.setControllerServiceHealth(controllerServiceHealth);
                     break;
                 case "bulletins":
-                    printBulletins(statusBuilder, bulletinList);
-                    break;
-                case "stats":
-                    statusBuilder.append("<Stats {'stats' is not a valid request for controller services}>");
-                    logger.warn("Status request is asking for stats for controller service " + id + " but stats are not possible for controller services");
+                    controllerServiceStatus.setBulletinList(transformBulletins(bulletinList));
                     break;
             }
         }
-        return statusBuilder;
+        return controllerServiceStatus;
     }
 
-    static StringBuilder parseSystemDiagnosticsRequest(SystemDiagnostics systemDiagnostics, String statusTypes, Logger logger) {
-        StringBuilder statusBuilder = new StringBuilder();
-        statusBuilder.append("System Diagnostics :");
-        String[] statusSplits = statusTypes.split(",");
-
-        if (systemDiagnostics == null) {
-            statusBuilder.append("Unable to get system diagnostics");
-            return statusBuilder;
+    static SystemDiagnosticsStatus parseSystemDiagnosticsRequest(SystemDiagnostics inputSystemDiagnostics, String statusTypes) throws StatusRequestException {
+        if (inputSystemDiagnostics == null) {
+            throw new StatusRequestException("Unable to get system diagnostics");
         }
+
+        SystemDiagnosticsStatus systemDiagnosticsStatus = new SystemDiagnosticsStatus();
+        String[] statusSplits = statusTypes.split(",");
 
         for (String statusType : statusSplits) {
             switch (statusType.toLowerCase().trim()) {
                 case "heap":
-                    statusBuilder.append("<Heap {Total Heap:");
-                    statusBuilder.append(systemDiagnostics.getTotalHeap());
-                    statusBuilder.append(", Max Heap:");
-                    statusBuilder.append(systemDiagnostics.getMaxHeap());
-                    statusBuilder.append(", Free Heap:");
-                    statusBuilder.append(systemDiagnostics.getFreeHeap());
-                    statusBuilder.append(", Used Heap:");
-                    statusBuilder.append(systemDiagnostics.getUsedHeap());
-                    statusBuilder.append(", Heap Utilization:");
-                    statusBuilder.append(systemDiagnostics.getHeapUtilization());
-                    statusBuilder.append(", Total NonHeap:");
-                    statusBuilder.append(systemDiagnostics.getTotalNonHeap());
-                    statusBuilder.append(", Max NonHeap:");
-                    statusBuilder.append(systemDiagnostics.getMaxNonHeap());
-                    statusBuilder.append(", Free NonHeap:");
-                    statusBuilder.append(systemDiagnostics.getFreeNonHeap());
-                    statusBuilder.append(", Used NonHeap:");
-                    statusBuilder.append(systemDiagnostics.getUsedNonHeap());
-                    statusBuilder.append(", NonHeap Utilization:");
-                    statusBuilder.append(systemDiagnostics.getNonHeapUtilization());
-                    statusBuilder.append("}>");
+                    HeapStatus heapStatus = new HeapStatus();
+                    heapStatus.setTotalHeap(inputSystemDiagnostics.getTotalHeap());
+                    heapStatus.setMaxHeap(inputSystemDiagnostics.getMaxHeap());
+                    heapStatus.setFreeHeap(inputSystemDiagnostics.getFreeHeap());
+                    heapStatus.setUsedHeap(inputSystemDiagnostics.getUsedHeap());
+                    heapStatus.setHeapUtilization(inputSystemDiagnostics.getHeapUtilization());
+                    heapStatus.setTotalNonHeap(inputSystemDiagnostics.getTotalNonHeap());
+                    heapStatus.setMaxNonHeap(inputSystemDiagnostics.getMaxNonHeap());
+                    heapStatus.setFreeNonHeap(inputSystemDiagnostics.getFreeNonHeap());
+                    heapStatus.setUsedNonHeap(inputSystemDiagnostics.getUsedNonHeap());
+                    heapStatus.setNonHeapUtilization(inputSystemDiagnostics.getNonHeapUtilization());
+                    systemDiagnosticsStatus.setHeapStatus(heapStatus);
                     break;
                 case "processorstats":
-                    statusBuilder.append("<Processor Stats {Processor Load Average:");
-                    statusBuilder.append(systemDiagnostics.getProcessorLoadAverage());
-                    statusBuilder.append(", Available Processors:");
-                    statusBuilder.append(systemDiagnostics.getAvailableProcessors());
-                    statusBuilder.append("}>");
+                    SystemProcessorStats systemProcessorStats = new SystemProcessorStats();
+                    systemProcessorStats.setAvailableProcessors(inputSystemDiagnostics.getAvailableProcessors());
+                    systemProcessorStats.setLoadAverage(inputSystemDiagnostics.getProcessorLoadAverage());
+                    systemDiagnosticsStatus.setProcessorStatus(systemProcessorStats);
                     break;
                 case "contentrepositoryusage":
-                    Map<String, StorageUsage> contentRepoStorage = systemDiagnostics.getContentRepositoryStorageUsage();
-                    statusBuilder.append("<Content Repository Usage {");
-                    boolean first = true;
+                    List<ContentRepositoryUsage> contentRepositoryUsageList = new LinkedList<>();
+                    Map<String, StorageUsage> contentRepoStorage = inputSystemDiagnostics.getContentRepositoryStorageUsage();
+
                     for (Map.Entry<String, StorageUsage> stringStorageUsageEntry : contentRepoStorage.entrySet()) {
-                        if (!first) {
-                            statusBuilder.append(", ");
-                        }
-                        statusBuilder.append("'");
+                        ContentRepositoryUsage contentRepositoryUsage = new ContentRepositoryUsage();
                         StorageUsage storageUsage = stringStorageUsageEntry.getValue();
-                        statusBuilder.append(stringStorageUsageEntry.getKey());
-                        statusBuilder.append("':[Free Space:");
-                        statusBuilder.append(storageUsage.getFreeSpace());
-                        statusBuilder.append(", Total Space:");
-                        statusBuilder.append(storageUsage.getTotalSpace());
-                        statusBuilder.append(", Disk Utilization:");
-                        statusBuilder.append(storageUsage.getDiskUtilization());
-                        statusBuilder.append(", Used Space:");
-                        statusBuilder.append(storageUsage.getUsedSpace());
-                        statusBuilder.append("]");
-                        first = false;
+
+                        contentRepositoryUsage.setName(storageUsage.getIdentifier());
+                        contentRepositoryUsage.setFreeSpace(storageUsage.getFreeSpace());
+                        contentRepositoryUsage.setTotalSpace(storageUsage.getTotalSpace());
+                        contentRepositoryUsage.setDiskUtilization(storageUsage.getDiskUtilization());
+                        contentRepositoryUsage.setUsedSpace(storageUsage.getUsedSpace());
+
+                        contentRepositoryUsageList.add(contentRepositoryUsage);
                     }
-                    statusBuilder.append("}>");
+                    systemDiagnosticsStatus.setContentRepositoryUsageList(contentRepositoryUsageList);
                     break;
                 case "flowfilerepositoryusage":
-                    StorageUsage flowFileRepoStorage = systemDiagnostics.getFlowFileRepositoryStorageUsage();
-                    statusBuilder.append("<FlowFile Repository Usage {");
-                    statusBuilder.append("Free Space:");
-                    statusBuilder.append(flowFileRepoStorage.getFreeSpace());
-                    statusBuilder.append(", Total Space:");
-                    statusBuilder.append(flowFileRepoStorage.getTotalSpace());
-                    statusBuilder.append(", Disk Utilization:");
-                    statusBuilder.append(flowFileRepoStorage.getDiskUtilization());
-                    statusBuilder.append(", Used Space:");
-                    statusBuilder.append(flowFileRepoStorage.getUsedSpace());
-                    statusBuilder.append("}>");
+                    FlowfileRepositoryUsage flowfileRepositoryUsage = new FlowfileRepositoryUsage();
+                    StorageUsage flowFileRepoStorage = inputSystemDiagnostics.getFlowFileRepositoryStorageUsage();
+
+                    flowfileRepositoryUsage.setFreeSpace(flowFileRepoStorage.getFreeSpace());
+                    flowfileRepositoryUsage.setTotalSpace(flowFileRepoStorage.getTotalSpace());
+                    flowfileRepositoryUsage.setDiskUtilization(flowFileRepoStorage.getDiskUtilization());
+                    flowfileRepositoryUsage.setUsedSpace(flowFileRepoStorage.getUsedSpace());
+
+                    systemDiagnosticsStatus.setFlowfileRepositoryUsage(flowfileRepositoryUsage);
                     break;
                 case "garbagecollection":
-                    Map<String, GarbageCollection> garbageCollectionMap = systemDiagnostics.getGarbageCollection();
-                    statusBuilder.append("<Garbage Collection {");
-                    first = true;
+                    List<GarbageCollectionStatus> garbageCollectionStatusList = new LinkedList<>();
+                    Map<String, GarbageCollection> garbageCollectionMap = inputSystemDiagnostics.getGarbageCollection();
+
                     for (Map.Entry<String, GarbageCollection> stringGarbageCollectionEntry : garbageCollectionMap.entrySet()) {
-                        if (!first) {
-                            statusBuilder.append(", ");
-                        }
+                        GarbageCollectionStatus garbageCollectionStatus = new GarbageCollectionStatus();
                         GarbageCollection garbageCollection = stringGarbageCollectionEntry.getValue();
-                        statusBuilder.append("'");
-                        statusBuilder.append(stringGarbageCollectionEntry.getKey());
-                        statusBuilder.append("':[Collection Count:");
-                        statusBuilder.append(garbageCollection.getCollectionCount());
-                        statusBuilder.append(", Collection Time:");
-                        statusBuilder.append(garbageCollection.getCollectionTime());
-                        statusBuilder.append("]");
-                        first = false;
+
+                        garbageCollectionStatus.setName(garbageCollection.getName());
+                        garbageCollectionStatus.setCollectionCount(garbageCollection.getCollectionCount());
+                        garbageCollectionStatus.setCollectionTime(garbageCollection.getCollectionTime());
+
+                        garbageCollectionStatusList.add(garbageCollectionStatus);
                     }
-                    statusBuilder.append("}>");
+                    systemDiagnosticsStatus.setGarbageCollectionStatusList(garbageCollectionStatusList);
                     break;
             }
         }
-        return statusBuilder;
+        return systemDiagnosticsStatus;
     }
 
-    static StringBuilder parseInstanceRequest(String statusTypes, FlowController flowController, ProcessGroupStatus rootGroupStatus) {
-        StringBuilder statusBuilder = new StringBuilder();
+    static InstanceStatus parseInstanceRequest(String statusTypes, FlowController flowController, ProcessGroupStatus rootGroupStatus) {
+        InstanceStatus instanceStatus = new InstanceStatus();
 
-        statusBuilder.append("Instance :");
         flowController.getAllControllerServices();
-
         List<Bulletin> bulletinList = flowController.getBulletinRepository().findBulletinsForController();
         String[] statusSplits = statusTypes.split(",");
 
         for (String statusType : statusSplits) {
             switch (statusType.toLowerCase().trim()) {
                 case "health":
-                    statusBuilder.append("<Health {Queued Count:");
-                    statusBuilder.append(rootGroupStatus.getQueuedCount());
-                    statusBuilder.append(", Queued Content Size:");
-                    statusBuilder.append(rootGroupStatus.getQueuedContentSize());
-                    statusBuilder.append(", Has Bulletin(s):");
-                    statusBuilder.append(!bulletinList.isEmpty());
-                    statusBuilder.append(", Active Threads:");
-                    statusBuilder.append(rootGroupStatus.getActiveThreadCount());
-                    statusBuilder.append("}>");
+                    InstanceHealth instanceHealth = new InstanceHealth();
+
+                    instanceHealth.setQueuedCount(rootGroupStatus.getQueuedCount());
+                    instanceHealth.setQueuedContentSize(rootGroupStatus.getQueuedContentSize());
+                    instanceHealth.setHasBulletins(!bulletinList.isEmpty());
+                    instanceHealth.setActiveThreads(rootGroupStatus.getActiveThreadCount());
+
+                    instanceStatus.setInstanceHealth(instanceHealth);
                     break;
                 case "bulletins":
-                    printBulletins(statusBuilder, flowController.getBulletinRepository().findBulletinsForController());
+                    instanceStatus.setBulletinList(transformBulletins(flowController.getBulletinRepository().findBulletinsForController()));
                     break;
                 case "stats":
-                    statusBuilder.append("<Stats {Bytes Read:");
-                    statusBuilder.append(rootGroupStatus.getBytesRead());
-                    statusBuilder.append(", Bytes Written:");
-                    statusBuilder.append(rootGroupStatus.getBytesWritten());
-                    statusBuilder.append(", Bytes Sent:");
-                    statusBuilder.append(rootGroupStatus.getBytesSent());
-                    statusBuilder.append(", FlowFiles Sent:");
-                    statusBuilder.append(rootGroupStatus.getFlowFilesSent());
-                    statusBuilder.append(", Bytes Transferred:");
-                    statusBuilder.append(rootGroupStatus.getBytesTransferred());
-                    statusBuilder.append(", FlowFiles Transferred:");
-                    statusBuilder.append(rootGroupStatus.getFlowFilesTransferred());
-                    statusBuilder.append(", Bytes Received:");
-                    statusBuilder.append(rootGroupStatus.getBytesReceived());
-                    statusBuilder.append(", FlowFiles Received:");
-                    statusBuilder.append(rootGroupStatus.getFlowFilesReceived());
-                    statusBuilder.append("}>");
+                    InstanceStats instanceStats = new InstanceStats();
+
+                    instanceStats.setBytesRead(rootGroupStatus.getBytesRead());
+                    instanceStats.setBytesWritten(rootGroupStatus.getBytesWritten());
+                    instanceStats.setBytesSent(rootGroupStatus.getBytesSent());
+                    instanceStats.setFlowfilesSent(rootGroupStatus.getFlowFilesSent());
+                    instanceStats.setBytesTransferred(rootGroupStatus.getBytesTransferred());
+                    instanceStats.setFlowfilesTransferred(rootGroupStatus.getFlowFilesTransferred());
+                    instanceStats.setBytesReceived(rootGroupStatus.getBytesReceived());
+                    instanceStats.setFlowfilesReceived(rootGroupStatus.getFlowFilesReceived());
+
+                    instanceStatus.setInstanceStats(instanceStats);
                     break;
             }
         }
-        return statusBuilder;
+        return instanceStatus;
     }
 
-    private static void appendValidationResults(StringBuilder statusBuilder, Collection<ValidationResult> validationResults) {
-        boolean printedValidationResults = false;
+    private static List<ValidationError> transformValidationResults(Collection<ValidationResult> validationResults) {
+        List<ValidationError> validationErrorList = new LinkedList<>();
         for (ValidationResult validationResult : validationResults) {
             if (!validationResult.isValid()) {
-                if (!printedValidationResults) {
-                    statusBuilder.append(", Validation Error(s):[");
-                    printedValidationResults = true;
-                } else {
-                    statusBuilder.append(", ");
-                }
+                ValidationError validationError = new ValidationError();
+                validationError.setSubject(validationResult.getSubject());
+                validationError.setInput(validationResult.getInput());
+                validationError.setReason(validationResult.getExplanation());
 
-                statusBuilder.append("'");
-                statusBuilder.append(validationResult.getSubject());
-                statusBuilder.append("' is invalid with input '");
-                statusBuilder.append(validationResult.getInput());
-                statusBuilder.append("' because '");
-                statusBuilder.append(validationResult.getExplanation());
-                statusBuilder.append("'");
+                validationErrorList.add(validationError);
             }
         }
-        if (printedValidationResults) {
-            statusBuilder.append("]");
-        }
+        return validationErrorList;
     }
 
-    private static void printBulletins(StringBuilder statusBuilder, List<Bulletin> bulletinList){
-        statusBuilder.append("<Bulletins ");
-        boolean first = true;
-
-        if (bulletinList.isEmpty()){
-            statusBuilder.append("'No bulletins'");
-        } else {
+    private static List<BulletinStatus> transformBulletins(List<Bulletin> bulletinList) {
+        List<BulletinStatus> bulletinStatusList = new LinkedList<>();
+        if (!bulletinList.isEmpty()) {
             for (Bulletin bulletin : bulletinList) {
-                if (!first) {
-                    statusBuilder.append(", ");
-                }
-                statusBuilder.append("{'");
-                statusBuilder.append(bulletin.getTimestamp());
-                statusBuilder.append("':'");
-                statusBuilder.append(bulletin.getMessage());
-                statusBuilder.append("'}");
-                first = false;
+                BulletinStatus bulletinStatus = new BulletinStatus();
+                bulletinStatus.setMessage(bulletin.getMessage());
+                bulletinStatus.setTimestamp(bulletin.getTimestamp());
+                bulletinStatusList.add(bulletinStatus);
             }
         }
-        statusBuilder.append(">");
+        return bulletinStatusList;
     }
 }

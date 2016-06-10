@@ -17,9 +17,14 @@
 
 package org.apache.nifi.minifi.commons.status.processor;
 
-public class ProcessorHealth {
+import org.apache.nifi.minifi.commons.status.common.ValidationError;
+
+import java.util.List;
+
+public class ProcessorHealth implements java.io.Serializable {
     private String runStatus;
     private boolean hasBulletins;
+    private List<ValidationError> validationErrorList;
 
     public ProcessorHealth() {
     }
@@ -38,5 +43,43 @@ public class ProcessorHealth {
 
     public void setRunStatus(String runStatus) {
         this.runStatus = runStatus;
+    }
+
+    public List<ValidationError> getValidationErrorList() {
+        return validationErrorList;
+    }
+
+    public void setValidationErrorList(List<ValidationError> validationErrorList) {
+        this.validationErrorList = validationErrorList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ProcessorHealth that = (ProcessorHealth) o;
+
+        if (isHasBulletins() != that.isHasBulletins()) return false;
+        if (getRunStatus() != null ? !getRunStatus().equals(that.getRunStatus()) : that.getRunStatus() != null) return false;
+        return getValidationErrorList() != null ? getValidationErrorList().equals(that.getValidationErrorList()) : that.getValidationErrorList() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getRunStatus() != null ? getRunStatus().hashCode() : 0;
+        result = 31 * result + (isHasBulletins() ? 1 : 0);
+        result = 31 * result + (getValidationErrorList() != null ? getValidationErrorList().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "runStatus='" + runStatus + '\'' +
+                ", hasBulletins=" + hasBulletins +
+                ", validationErrorList=" + validationErrorList +
+                '}';
     }
 }
