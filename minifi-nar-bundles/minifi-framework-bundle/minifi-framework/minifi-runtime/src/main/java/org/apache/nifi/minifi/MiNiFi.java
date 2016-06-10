@@ -216,6 +216,10 @@ public class MiNiFi {
         timer.schedule(timerTask, 60000L);
     }
 
+    MiNiFiServer getMinifiServer() {
+        return minifiServer;
+    }
+
     /**
      * Main entry point of the application.
      *

@@ -17,14 +17,15 @@
 
 package org.apache.nifi.minifi.commons.status.instance;
 
-import org.apache.nifi.minifi.commons.status.common.Bulletin;
+import org.apache.nifi.minifi.commons.status.common.BulletinStatus;
 
 import java.util.List;
 
-public class InstanceStatus {
+public class InstanceStatus implements java.io.Serializable {
 
     private InstanceHealth instanceHealth;
-    private List<Bulletin> bulletinList;
+    private List<BulletinStatus> bulletinList;
+    private InstanceStats instanceStats;
 
     public InstanceStatus() {
     }
@@ -37,11 +38,49 @@ public class InstanceStatus {
         this.instanceHealth = instanceHealth;
     }
 
-    public List<Bulletin> getBulletinList() {
+    public List<BulletinStatus> getBulletinList() {
         return bulletinList;
     }
 
-    public void setBulletinList(List<Bulletin> bulletinList) {
+    public void setBulletinList(List<BulletinStatus> bulletinList) {
         this.bulletinList = bulletinList;
+    }
+
+    public InstanceStats getInstanceStats() {
+        return instanceStats;
+    }
+
+    public void setInstanceStats(InstanceStats instanceStats) {
+        this.instanceStats = instanceStats;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        InstanceStatus that = (InstanceStatus) o;
+
+        if (getInstanceHealth() != null ? !getInstanceHealth().equals(that.getInstanceHealth()) : that.getInstanceHealth() != null) return false;
+        if (getBulletinList() != null ? !getBulletinList().equals(that.getBulletinList()) : that.getBulletinList() != null) return false;
+        return getInstanceStats() != null ? getInstanceStats().equals(that.getInstanceStats()) : that.getInstanceStats() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getInstanceHealth() != null ? getInstanceHealth().hashCode() : 0;
+        result = 31 * result + (getBulletinList() != null ? getBulletinList().hashCode() : 0);
+        result = 31 * result + (getInstanceStats() != null ? getInstanceStats().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "instanceHealth=" + instanceHealth +
+                ", bulletinList=" + bulletinList +
+                ", instanceStats=" + instanceStats +
+                '}';
     }
 }

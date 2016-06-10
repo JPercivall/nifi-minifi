@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-package org.apache.nifi.minifi.commons.status.controllerservice;
+package org.apache.nifi.minifi.commons.status.reportingTask;
 
 import org.apache.nifi.minifi.commons.status.common.BulletinStatus;
 
 import java.util.List;
 
-public class ControllerServiceStatus implements java.io.Serializable {
+public class ReportingTaskStatus implements java.io.Serializable {
     private String name;
-    private ControllerServiceHealth controllerServiceHealth;
+    private ReportingTaskHealth reportingTaskHealth;
     private List<BulletinStatus> bulletinList;
 
-    public ControllerServiceStatus() {
+    public ReportingTaskStatus() {
     }
 
     public String getName() {
@@ -37,12 +37,12 @@ public class ControllerServiceStatus implements java.io.Serializable {
         this.name = name;
     }
 
-    public ControllerServiceHealth getControllerServiceHealth() {
-        return controllerServiceHealth;
+    public ReportingTaskHealth getReportingTaskHealth() {
+        return reportingTaskHealth;
     }
 
-    public void setControllerServiceHealth(ControllerServiceHealth controllerServiceHealth) {
-        this.controllerServiceHealth = controllerServiceHealth;
+    public void setReportingTaskHealth(ReportingTaskHealth reportingTaskHealth) {
+        this.reportingTaskHealth = reportingTaskHealth;
     }
 
     public List<BulletinStatus> getBulletinList() {
@@ -58,10 +58,10 @@ public class ControllerServiceStatus implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ControllerServiceStatus that = (ControllerServiceStatus) o;
+        ReportingTaskStatus that = (ReportingTaskStatus) o;
 
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        if (getControllerServiceHealth() != null ? !getControllerServiceHealth().equals(that.getControllerServiceHealth()) : that.getControllerServiceHealth() != null) return false;
+        if (getReportingTaskHealth() != null ? !getReportingTaskHealth().equals(that.getReportingTaskHealth()) : that.getReportingTaskHealth() != null) return false;
         return getBulletinList() != null ? getBulletinList().equals(that.getBulletinList()) : that.getBulletinList() == null;
 
     }
@@ -69,7 +69,7 @@ public class ControllerServiceStatus implements java.io.Serializable {
     @Override
     public int hashCode() {
         int result = getName() != null ? getName().hashCode() : 0;
-        result = 31 * result + (getControllerServiceHealth() != null ? getControllerServiceHealth().hashCode() : 0);
+        result = 31 * result + (getReportingTaskHealth() != null ? getReportingTaskHealth().hashCode() : 0);
         result = 31 * result + (getBulletinList() != null ? getBulletinList().hashCode() : 0);
         return result;
     }
@@ -78,7 +78,7 @@ public class ControllerServiceStatus implements java.io.Serializable {
     public String toString() {
         return "{" +
                 "name='" + name + '\'' +
-                ", controllerServiceHealth=" + controllerServiceHealth +
+                ", reportingTaskHealth=" + reportingTaskHealth +
                 ", bulletinList=" + bulletinList +
                 '}';
     }

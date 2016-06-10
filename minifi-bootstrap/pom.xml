@@ -50,6 +50,10 @@ limitations under the License.
             <artifactId>minifi-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.nifi.minifi</groupId>
+            <artifactId>minifi-utils</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>1.17</version>

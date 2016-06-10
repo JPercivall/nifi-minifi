@@ -17,7 +17,7 @@
 
 package org.apache.nifi.minifi.commons.status.connection;
 
-public class ConnectionStats {
+public class ConnectionStats implements java.io.Serializable {
     private int inputCount;
     private long inputBytes;
     private int outputCount;
@@ -56,5 +56,38 @@ public class ConnectionStats {
 
     public void setOutputBytes(long outputBytes) {
         this.outputBytes = outputBytes;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ConnectionStats that = (ConnectionStats) o;
+
+        if (getInputCount() != that.getInputCount()) return false;
+        if (getInputBytes() != that.getInputBytes()) return false;
+        if (getOutputCount() != that.getOutputCount()) return false;
+        return getOutputBytes() == that.getOutputBytes();
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getInputCount();
+        result = 31 * result + (int) (getInputBytes() ^ (getInputBytes() >>> 32));
+        result = 31 * result + getOutputCount();
+        result = 31 * result + (int) (getOutputBytes() ^ (getOutputBytes() >>> 32));
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "inputCount=" + inputCount +
+                ", inputBytes=" + inputBytes +
+                ", outputCount=" + outputCount +
+                ", outputBytes=" + outputBytes +
+                '}';
     }
 }

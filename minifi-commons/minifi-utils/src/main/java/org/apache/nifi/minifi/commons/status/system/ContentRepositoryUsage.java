@@ -17,7 +17,7 @@
 
 package org.apache.nifi.minifi.commons.status.system;
 
-public class ContentRepositoryUsage {
+public class ContentRepositoryUsage implements java.io.Serializable {
 
     private String name;
     private long freeSpace;
@@ -67,5 +67,41 @@ public class ContentRepositoryUsage {
 
     public void setDiskUtilization(int diskUtilization) {
         this.diskUtilization = diskUtilization;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ContentRepositoryUsage that = (ContentRepositoryUsage) o;
+
+        if (getFreeSpace() != that.getFreeSpace()) return false;
+        if (getTotalSpace() != that.getTotalSpace()) return false;
+        if (getUsedSpace() != that.getUsedSpace()) return false;
+        if (getDiskUtilization() != that.getDiskUtilization()) return false;
+        return getName() != null ? getName().equals(that.getName()) : that.getName() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (int) (getFreeSpace() ^ (getFreeSpace() >>> 32));
+        result = 31 * result + (int) (getTotalSpace() ^ (getTotalSpace() >>> 32));
+        result = 31 * result + (int) (getUsedSpace() ^ (getUsedSpace() >>> 32));
+        result = 31 * result + getDiskUtilization();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "name='" + name + '\'' +
+                ", freeSpace=" + freeSpace +
+                ", totalSpace=" + totalSpace +
+                ", usedSpace=" + usedSpace +
+                ", diskUtilization=" + diskUtilization +
+                '}';
     }
 }

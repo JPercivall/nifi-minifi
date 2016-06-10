@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.nifi.minifi.commons.status.system;
+package org.apache.nifi.minifi.commons.status.rpg;
 
-public class GarbageCollectionStatus implements java.io.Serializable {
-
+public class InputPortStatus implements java.io.Serializable {
     private String name;
-    private long collectionCount;
-    private long collectionTime;
+    private boolean targetExists;
+    private boolean targetRunning;
 
-    public GarbageCollectionStatus() {
+    public InputPortStatus() {
     }
 
     public String getName() {
@@ -34,20 +33,20 @@ public class GarbageCollectionStatus implements java.io.Serializable {
         this.name = name;
     }
 
-    public long getCollectionCount() {
-        return collectionCount;
+    public boolean isTargetExists() {
+        return targetExists;
     }
 
-    public void setCollectionCount(long collectionCount) {
-        this.collectionCount = collectionCount;
+    public void setTargetExists(boolean targetExists) {
+        this.targetExists = targetExists;
     }
 
-    public long getCollectionTime() {
-        return collectionTime;
+    public boolean isTargetRunning() {
+        return targetRunning;
     }
 
-    public void setCollectionTime(long collectionTime) {
-        this.collectionTime = collectionTime;
+    public void setTargetRunning(boolean targetRunning) {
+        this.targetRunning = targetRunning;
     }
 
     @Override
@@ -55,19 +54,19 @@ public class GarbageCollectionStatus implements java.io.Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        GarbageCollectionStatus that = (GarbageCollectionStatus) o;
+        InputPortStatus inputPortStatus = (InputPortStatus) o;
 
-        if (getCollectionCount() != that.getCollectionCount()) return false;
-        if (getCollectionTime() != that.getCollectionTime()) return false;
-        return getName() != null ? getName().equals(that.getName()) : that.getName() == null;
+        if (isTargetExists() != inputPortStatus.isTargetExists()) return false;
+        if (isTargetRunning() != inputPortStatus.isTargetRunning()) return false;
+        return getName() != null ? getName().equals(inputPortStatus.getName()) : inputPortStatus.getName() == null;
 
     }
 
     @Override
     public int hashCode() {
         int result = getName() != null ? getName().hashCode() : 0;
-        result = 31 * result + (int) (getCollectionCount() ^ (getCollectionCount() >>> 32));
-        result = 31 * result + (int) (getCollectionTime() ^ (getCollectionTime() >>> 32));
+        result = 31 * result + (isTargetExists() ? 1 : 0);
+        result = 31 * result + (isTargetRunning() ? 1 : 0);
         return result;
     }
 
@@ -75,8 +74,8 @@ public class GarbageCollectionStatus implements java.io.Serializable {
     public String toString() {
         return "{" +
                 "name='" + name + '\'' +
-                ", collectionCount=" + collectionCount +
-                ", collectionTime=" + collectionTime +
+                ", targetExists=" + targetExists +
+                ", targetRunning=" + targetRunning +
                 '}';
     }
 }

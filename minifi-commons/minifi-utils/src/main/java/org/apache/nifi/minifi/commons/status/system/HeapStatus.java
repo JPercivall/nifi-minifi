@@ -17,7 +17,7 @@
 
 package org.apache.nifi.minifi.commons.status.system;
 
-public class HeapStatus {
+public class HeapStatus implements java.io.Serializable {
 
     private long totalHeap;
     private long maxHeap;
@@ -111,5 +111,56 @@ public class HeapStatus {
 
     public void setNonHeapUtilization(int nonHeapUtilization) {
         this.nonHeapUtilization = nonHeapUtilization;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        HeapStatus that = (HeapStatus) o;
+
+        if (getTotalHeap() != that.getTotalHeap()) return false;
+        if (getMaxHeap() != that.getMaxHeap()) return false;
+        if (getFreeHeap() != that.getFreeHeap()) return false;
+        if (getUsedHeap() != that.getUsedHeap()) return false;
+        if (getHeapUtilization() != that.getHeapUtilization()) return false;
+        if (getTotalNonHeap() != that.getTotalNonHeap()) return false;
+        if (getMaxNonHeap() != that.getMaxNonHeap()) return false;
+        if (getFreeNonHeap() != that.getFreeNonHeap()) return false;
+        if (getUsedNonHeap() != that.getUsedNonHeap()) return false;
+        return getNonHeapUtilization() == that.getNonHeapUtilization();
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (getTotalHeap() ^ (getTotalHeap() >>> 32));
+        result = 31 * result + (int) (getMaxHeap() ^ (getMaxHeap() >>> 32));
+        result = 31 * result + (int) (getFreeHeap() ^ (getFreeHeap() >>> 32));
+        result = 31 * result + (int) (getUsedHeap() ^ (getUsedHeap() >>> 32));
+        result = 31 * result + getHeapUtilization();
+        result = 31 * result + (int) (getTotalNonHeap() ^ (getTotalNonHeap() >>> 32));
+        result = 31 * result + (int) (getMaxNonHeap() ^ (getMaxNonHeap() >>> 32));
+        result = 31 * result + (int) (getFreeNonHeap() ^ (getFreeNonHeap() >>> 32));
+        result = 31 * result + (int) (getUsedNonHeap() ^ (getUsedNonHeap() >>> 32));
+        result = 31 * result + getNonHeapUtilization();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "totalHeap=" + totalHeap +
+                ", maxHeap=" + maxHeap +
+                ", freeHeap=" + freeHeap +
+                ", usedHeap=" + usedHeap +
+                ", heapUtilization=" + heapUtilization +
+                ", totalNonHeap=" + totalNonHeap +
+                ", maxNonHeap=" + maxNonHeap +
+                ", freeNonHeap=" + freeNonHeap +
+                ", usedNonHeap=" + usedNonHeap +
+                ", nonHeapUtilization=" + nonHeapUtilization +
+                '}';
     }
 }

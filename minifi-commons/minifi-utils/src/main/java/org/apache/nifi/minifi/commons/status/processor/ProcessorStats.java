@@ -17,72 +17,114 @@
 
 package org.apache.nifi.minifi.commons.status.processor;
 
-public class ProcessorStats {
+public class ProcessorStats implements java.io.Serializable {
 
-    private String activeThreads;
-    private String flowfilesReceived;
-    private String bytesRead;
-    private String bytesWritten;
-    private String flowfilesOut;
-    private String tasks;
-    private String processingNanos;
+    private int activeThreads;
+    private int flowfilesReceived;
+    private long bytesRead;
+    private long bytesWritten;
+    private int flowfilesSent;
+    private int invocations;
+    private long processingNanos;
 
     public ProcessorStats() {
     }
 
-    public String getActiveThreads() {
+    public int getActiveThreads() {
         return activeThreads;
     }
 
-    public void setActiveThreads(String activeThreads) {
+    public void setActiveThreads(int activeThreads) {
         this.activeThreads = activeThreads;
     }
 
-    public String getFlowfilesReceived() {
+    public int getFlowfilesReceived() {
         return flowfilesReceived;
     }
 
-    public void setFlowfilesReceived(String flowfilesReceived) {
+    public void setFlowfilesReceived(int flowfilesReceived) {
         this.flowfilesReceived = flowfilesReceived;
     }
 
-    public String getBytesRead() {
+    public long getBytesRead() {
         return bytesRead;
     }
 
-    public void setBytesRead(String bytesRead) {
+    public void setBytesRead(long bytesRead) {
         this.bytesRead = bytesRead;
     }
 
-    public String getBytesWritten() {
+    public long getBytesWritten() {
         return bytesWritten;
     }
 
-    public void setBytesWritten(String bytesWritten) {
+    public void setBytesWritten(long bytesWritten) {
         this.bytesWritten = bytesWritten;
     }
 
-    public String getFlowfilesOut() {
-        return flowfilesOut;
+    public int getFlowfilesSent() {
+        return flowfilesSent;
     }
 
-    public void setFlowfilesOut(String flowfilesOut) {
-        this.flowfilesOut = flowfilesOut;
+    public void setFlowfilesSent(int flowfilesSent) {
+        this.flowfilesSent = flowfilesSent;
     }
 
-    public String getTasks() {
-        return tasks;
+    public int getInvocations() {
+        return invocations;
     }
 
-    public void setTasks(String tasks) {
-        this.tasks = tasks;
+    public void setInvocations(int invocations) {
+        this.invocations = invocations;
     }
 
-    public String getProcessingNanos() {
+    public long getProcessingNanos() {
         return processingNanos;
     }
 
-    public void setProcessingNanos(String processingNanos) {
+    public void setProcessingNanos(long processingNanos) {
         this.processingNanos = processingNanos;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ProcessorStats that = (ProcessorStats) o;
+
+        if (getActiveThreads() != that.getActiveThreads()) return false;
+        if (getFlowfilesReceived() != that.getFlowfilesReceived()) return false;
+        if (getBytesRead() != that.getBytesRead()) return false;
+        if (getBytesWritten() != that.getBytesWritten()) return false;
+        if (getFlowfilesSent() != that.getFlowfilesSent()) return false;
+        if (getInvocations() != that.getInvocations()) return false;
+        return getProcessingNanos() == that.getProcessingNanos();
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getActiveThreads();
+        result = 31 * result + getFlowfilesReceived();
+        result = 31 * result + (int) (getBytesRead() ^ (getBytesRead() >>> 32));
+        result = 31 * result + (int) (getBytesWritten() ^ (getBytesWritten() >>> 32));
+        result = 31 * result + getFlowfilesSent();
+        result = 31 * result + getInvocations();
+        result = 31 * result + (int) (getProcessingNanos() ^ (getProcessingNanos() >>> 32));
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "activeThreads=" + activeThreads +
+                ", flowfilesReceived=" + flowfilesReceived +
+                ", bytesRead=" + bytesRead +
+                ", bytesWritten=" + bytesWritten +
+                ", flowfilesSent=" + flowfilesSent +
+                ", invocations=" + invocations +
+                ", processingNanos=" + processingNanos +
+                '}';
     }
 }
