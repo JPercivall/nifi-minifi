@@ -95,7 +95,6 @@ limitations under the License.
         <org.slf4j.version>1.7.12</org.slf4j.version>
         <org.apache.nifi.version>0.6.0</org.apache.nifi.version>
         <jetty.version>9.3.8.v20160314</jetty.version>
-        <spring.version>4.1.6.RELEASE</spring.version>
     </properties>
 
     <dependencies>
@@ -418,16 +417,6 @@ limitations under the License.
                 <version>${org.apache.nifi.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-beans</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-framework-core</artifactId>

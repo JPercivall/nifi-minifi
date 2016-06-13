@@ -79,7 +79,7 @@ public class MiNiFiServer implements NiFiServer {
             flowService.start();
             flowService.load(null);
             flowController.onFlowInitialized(true);
-            //flowController.getGroup(flowController.getRootGroupId()).startProcessing();
+            flowController.getGroup(flowController.getRootGroupId()).startProcessing();
 
 
             logger.info("Flow loaded successfully.");

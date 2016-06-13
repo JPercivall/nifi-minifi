@@ -51,6 +51,7 @@ limitations under the License.
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-persistent-provenance-repository</artifactId>
+            <scope>compile</scope>
             <version>0.6.0</version>
         </dependency>
     </dependencies>
