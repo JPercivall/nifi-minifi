@@ -16,6 +16,7 @@
  */
 package org.apache.nifi.minifi;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.Constructor;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.nifi.nar.ExtensionManager;
 import org.apache.nifi.nar.NarClassLoaders;
 import org.apache.nifi.nar.NarUnpacker;
+import org.apache.nifi.util.FileUtils;
 import org.apache.nifi.util.NiFiProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,9 +92,9 @@ public class MiNiFi {
         // jetty will not attempt to re-extract the war into the directory. by removing
         // the working directory, we can be assured that it will attempt to extract the
         // war every time the application starts.
-        /*File webWorkingDir = properties.getWebWorkingDirectory();
+        File webWorkingDir = properties.getWebWorkingDirectory();
         FileUtils.deleteFilesInDirectory(webWorkingDir, null, logger, true, true);
-        FileUtils.deleteFile(webWorkingDir, logger, 3);*/
+        FileUtils.deleteFile(webWorkingDir, logger, 3);
 
         detectTimingIssues();
 
