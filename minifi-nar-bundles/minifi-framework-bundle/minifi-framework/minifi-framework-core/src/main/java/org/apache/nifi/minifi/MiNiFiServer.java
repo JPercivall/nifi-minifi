@@ -16,7 +16,6 @@
  */
 package org.apache.nifi.minifi;
 
-import org.apache.nifi.NiFiServer;
 import org.apache.nifi.admin.service.AuditService;
 import org.apache.nifi.admin.service.UserService;
 import org.apache.nifi.admin.service.impl.StandardAuditService;
@@ -29,7 +28,6 @@ import org.apache.nifi.encrypt.StringEncryptor;
 import org.apache.nifi.minifi.commons.status.FlowStatusReport;
 import org.apache.nifi.minifi.status.StatusConfigReporter;
 import org.apache.nifi.minifi.status.StatusRequestException;
-import org.apache.nifi.nar.ExtensionMapping;
 import org.apache.nifi.services.FlowService;
 import org.apache.nifi.util.NiFiProperties;
 import org.slf4j.Logger;
@@ -37,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-public class MiNiFiServer implements NiFiServer {
+public class MiNiFiServer {
 
     private static final Logger logger = LoggerFactory.getLogger(MiNiFiServer.class);
     private final NiFiProperties props;
@@ -51,7 +49,6 @@ public class MiNiFiServer implements NiFiServer {
         this.props = props;
     }
 
-    @Override
     public void start() {
         try {
             logger.info("Loading Flow...");
@@ -98,12 +95,6 @@ public class MiNiFiServer implements NiFiServer {
         System.exit(1);
     }
 
-    @Override
-    public void setExtensionMapping(ExtensionMapping extensionMapping) {
-        // Only valid for servers deploying web extensions
-    }
-
-    @Override
     public void stop() {
         try {
             flowService.stop(false);
