@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Encapsulates the Jetty instance.
  */
 public class MiNiFiServer implements NiFiServer {
 
@@ -45,7 +44,6 @@ public class MiNiFiServer implements NiFiServer {
     private FlowService flowService;
 
     /**
-     * Creates and configures a new Jetty instance.
      *
      * @param props the configuration
      */
