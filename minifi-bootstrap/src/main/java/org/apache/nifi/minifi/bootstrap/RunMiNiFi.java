@@ -176,11 +176,6 @@ public class RunMiNiFi {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        System.out.println("Args");
-        for(String arg: args) {
-            System.out.println(arg);
-        }
-
         if (args.length < 1 || args.length > 3) {
             printUsage();
             return;

@@ -70,13 +70,8 @@ public final class NarClassLoaders {
         // get the system classloader
         final ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 
-        //final ClassLoader applicationClassLoader = NarClassLoader.class.getClassLoader().getParent();
-
-
         // get the current context class loader
         ClassLoader currentContextClassLoader = Thread.currentThread().getContextClassLoader();
-        logger.error("Application class loader:"+currentContextClassLoader);
-        logger.error("Application class loader:"+Arrays.toString(((URLClassLoader)currentContextClassLoader).getURLs()));
 
         // find all nar files and create class loaders for them.
         final Map<String, ClassLoader> extensionDirectoryClassLoaderLookup = new LinkedHashMap<>();
